@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkedIn Profile Scraper</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        padding-top: 50px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .header h1 {
+        color: #0a66c2; /* LinkedIn blue */
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .btn-primary {
+        background-color: #0a66c2;
+        border-color: #0a66c2;
+      }
+      .features {
+        margin-top: 40px;
+      }
+      .feature-item {
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>LinkedIn Profile Scraper</h1>
+        <p class="lead">Extract posts from LinkedIn profiles</p>
+      </div>
+
+      <form action="/start_scrape" method="POST">
+        <div class="form-group">
+          <label for="profile_url">LinkedIn Profile URL:</label>
+          <input
+            type="url"
+            class="form-control"
+            id="profile_url"
+            name="profile_url"
+            placeholder="https://www.linkedin.com/in/username/"
+            required
+          />
+          <small class="form-text text-muted"
+            >Enter the full URL of the LinkedIn profile you want to scrape.</small
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="max_posts">Maximum Posts to Scrape:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="max_posts"
+            name="max_posts"
+            value="50"
+            min="1"
+            max="100"
+          />
+          <small class="form-text text-muted"
+            >Enter the maximum number of posts you want to extract.</small
+          >
+        </div>
+
+        <!-- Hidden field to always use new browser window -->
+        <input type="hidden" name="use_same_browser" value="false" />
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary btn-lg btn-block w-100">
+            Start Scraping
+          </button>
+        </div>
+      </form>
+
+      <div class="features">
+        <h4>How it works:</h4>
+        <ol>
+          <li class="feature-item">Enter the LinkedIn profile URL you want to scrape</li>
+          <li class="feature-item">A new browser window will open for LinkedIn</li>
+          <li class="feature-item">
+            If you're already logged in to LinkedIn, scraping will begin automatically
+          </li>
+          <li class="feature-item">
+            If not logged in, you'll need to log in first (supports two-factor authentication)
+          </li>
+          <li class="feature-item">
+            After login, the scraper will automatically navigate to the profile and extract posts
+          </li>
+          <li class="feature-item">Results will be available to download as a CSV file</li>
+        </ol>
+
+        <div class="alert alert-info mt-4">
+          <strong>For best results:</strong> Start Chrome or Edge with remote debugging enabled.
+          <p class="mb-0 mt-2">
+            <strong>For Chrome:</strong> Start with <code>--remote-debugging-port=9222</code>
+          </p>
+          <p class="mb-0">
+            <strong>For Edge:</strong> Start with <code>--remote-debugging-port=9222</code>
+          </p>
+          <p class="mt-2">
+            <strong>Example (macOS):</strong>
+            <code
+              >/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome
+              --remote-debugging-port=9222</code
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
