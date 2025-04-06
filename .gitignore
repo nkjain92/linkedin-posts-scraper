@@ -7,3 +7,6 @@
 .env.production.local
 .env.development
 .env.test
+__pycache__/
+*.py[cod]
+*$py.class
