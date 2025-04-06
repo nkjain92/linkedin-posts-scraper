@@ -52,6 +52,7 @@ class LinkedInScraperAgent:
         self.playwright = None
         self.browser = None
         self.page = None
+        self.storage_state_path = "linkedin_session.json"
 
     def _init_browser(self):
         """Initialize the browser"""
@@ -62,6 +63,12 @@ class LinkedInScraperAgent:
             logger.info(f"Connecting to existing browser at {self.browser_ws_endpoint}")
             self.browser = self.playwright.chromium.connect_over_cdp(self.browser_ws_endpoint)
         else:
+            # Check if we have a saved session state
+            storage_state = None
+            if os.path.exists(self.storage_state_path):
+                logger.info(f"Found saved session state at {self.storage_state_path}")
+                storage_state = self.storage_state_path
+
             # Launch a new browser
             logger.info("Launching new browser")
             # Setting longer timeouts and additional browser options
@@ -78,6 +85,16 @@ class LinkedInScraperAgent:
                     '--disable-popup-blocking'
                 ]
             )
+
+    def _save_browser_state(self):
+        """Save the browser state to a file for future use"""
+        try:
+            if self.page:
+                logger.info(f"Saving browser session state to {self.storage_state_path}")
+                self.page.context.storage_state(path=self.storage_state_path)
+                logger.info("Browser session state saved successfully")
+        except Exception as e:
+            logger.error(f"Error saving browser state: {e}")
 
     def _close_browser(self):
         """Close the browser"""
@@ -104,9 +121,16 @@ class LinkedInScraperAgent:
                 self._init_browser()
 
             # Create a new page with correct parameters - Browser.new_page() doesn't take timeout
-            self.page = self.browser.new_page(
-                viewport={"width": 1280, "height": 1024}
-            )
+            context_options = {"viewport": {"width": 1280, "height": 1024}}
+
+            # Use storage state if available
+            if os.path.exists(self.storage_state_path) and not self.use_existing_browser:
+                logger.info(f"Using saved session state from {self.storage_state_path}")
+                context_options["storage_state"] = self.storage_state_path
+
+            # Create context with storage state if available
+            context = self.browser.new_context(**context_options)
+            self.page = context.new_page()
 
             # Set the default page timeout
             self.page.set_default_timeout(90000)  # 90 seconds
@@ -128,6 +152,8 @@ class LinkedInScraperAgent:
             # Check if already logged in
             if not self._check_login_required(self.page):
                 logger.info("Already logged in to LinkedIn")
+                # Save the browser state for future use
+                self._save_browser_state()
                 return True
 
             # If not logged in, go to login page
@@ -153,6 +179,8 @@ class LinkedInScraperAgent:
                     wait_until="domcontentloaded"
                 )
                 logger.info("Successfully logged in to LinkedIn")
+                # Save the browser state for future use
+                self._save_browser_state()
                 return True
             except Exception as e:
                 logger.error(f"Login timeout or error: {e}")
@@ -160,6 +188,8 @@ class LinkedInScraperAgent:
                 # Check if we're on a LinkedIn page that indicates successful login
                 if "linkedin.com" in self.page.url and not "/login" in self.page.url:
                     logger.info(f"You appear to be logged in to LinkedIn (current URL: {self.page.url})")
+                    # Save the browser state for future use
+                    self._save_browser_state()
                     return True
 
                 # Try waiting a bit longer and check again - the user might be in the process of logging in
@@ -169,6 +199,8 @@ class LinkedInScraperAgent:
                 # Check one more time
                 if not self._check_login_required(self.page):
                     logger.info("Successfully logged in to LinkedIn after waiting")
+                    # Save the browser state for future use
+                    self._save_browser_state()
                     return True
 
                 return False
@@ -196,9 +228,17 @@ class LinkedInScraperAgent:
                 self._init_browser()
 
             if not self.page:
-                self.page = self.browser.new_page(
-                    viewport={"width": 1280, "height": 1024}
-                )
+                # Create context with storage state if available
+                context_options = {"viewport": {"width": 1280, "height": 1024}}
+
+                # Use storage state if available
+                if os.path.exists(self.storage_state_path) and not self.use_existing_browser:
+                    logger.info(f"Using saved session state from {self.storage_state_path}")
+                    context_options["storage_state"] = self.storage_state_path
+
+                # Create context with storage state if available
+                context = self.browser.new_context(**context_options)
+                self.page = context.new_page()
                 self.page.set_default_timeout(90000)  # 90 seconds
 
             # First get the profile name by visiting the main profile page
@@ -243,6 +283,9 @@ class LinkedInScraperAgent:
 
                 except TimeoutError as e:
                     logger.warning(f"Timeout while navigating back to profile, but continuing: {e}")
+            else:
+                # Already logged in, save the browser state
+                self._save_browser_state()
 
             # Take a screenshot of the profile page
             screenshot_path = f"linkedin_profile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"

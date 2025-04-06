@@ -12,6 +12,7 @@ A web application that allows you to scrape and extract posts from LinkedIn prof
 - Exports results to CSV with proper formatting
 - Shows real-time progress updates
 - Works with various LinkedIn profile layouts
+- **Browser Session Persistence**: Saves and reuses login sessions to avoid repeated logins
 
 ## Setup Instructions
 
@@ -125,3 +126,15 @@ The application uses:
 - Playwright for browser automation
 - Pydantic for data modeling
 - Bootstrap for the frontend UI
+
+## Browser Session Persistence
+
+The application now includes session persistence to save you from having to log in each time:
+
+- After a successful login, your LinkedIn session is automatically saved to a file (`linkedin_session.json`)
+- On subsequent runs, the application will attempt to use this saved session
+- This significantly speeds up scraping by avoiding repeated logins
+- Particularly useful for frequent use or batch scraping operations
+- Works with both manual and automated login flows
+
+The session persistence feature is completely automatic - no additional configuration is needed.
